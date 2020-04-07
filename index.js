@@ -14,16 +14,17 @@ io.on('connection', (socket) => {
     socket.on("join", (id) => {
         socket.join(id)
     });
-    socket.on("loadVideo", (data) => {
+    socket.on("play", (data) => {
         var video_id = data.url.split('v=')[1];
         var ampersandPosition = video_id.indexOf('&');
         if (ampersandPosition != -1) {
             video_id = video_id.substring(0, ampersandPosition);
         }
-        io.in(data.room).emit("loadVideo", video_id)
-    })
-    socket.on("playVideo", (data) => {
-        io.in(data.room).emit("playVideo")
+        io.in(data.room).emit("load", video_id)
+
+        setTimeout(() => {
+            io.in(data.room).emit("play")
+        }, 10 * 1000);
     })
 });
 
@@ -44,4 +45,4 @@ app.get('/api/:uuid', (req, res) => {
     })
 })
 
-srv.listen(port, () => console.log(`Example app listening at http://localhost:${port}`))
+srv.listen(port, "0.0.0.0", () => console.log(`Example app listening at http://localhost:${port}`))
