@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css"
+        integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
+
+    <title>Video Sync!</title>
+</head>
+
+<body>
+    <div class="container">
+        <h1>Room: <span id="room"></span></h1>
+        <div class="d-flex p-2">
+            <div class="form-group mb-0 flex-grow-1">
+                <input id="url" type="text" class="form-control" placeholder="youtube link">
+            </div>
+            <button id="loadVideo" class="btn btn-primary ml-2">load</button>
+            <button id="playVideo" class="btn btn-primary ml-2">play</button>
+        </div>
+    </div>
+    <div class="embed-responsive embed-responsive-16by9">
+        <div id="player"></div>
+    </div>
+
+    <!-- Optional JavaScript -->
+    <!-- jQuery first, then Popper.js, then Bootstrap JS -->
+    <script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js"
+        integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo"
+        crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js"
+        integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6"
+        crossorigin="anonymous"></script>
+    <script>
+        var socket
+        // 2. This code loads the IFrame Player API code asynchronously.
+        var tag = document.createElement('script');
+
+        tag.src = "https://www.youtube.com/iframe_api";
+        var firstScriptTag = document.getElementsByTagName('script')[0];
+        firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+
+        // 3. This function creates an <iframe> (and YouTube player)
+        //    after the API code downloads.
+        var player;
+
+        function onYouTubeIframeAPIReady() {
+            player = new YT.Player('player');
+        }
+
+        function getQueryVariable(variable) {
+            var query = window.location.search.substring(1);
+            var vars = query.split("&");
+            for (var i = 0; i < vars.length; i++) {
+                var pair = vars[i].split("=");
+                if (pair[0] == variable) { return pair[1]; }
+            }
+            return (false);
+        }
+
+        $(function () {
+            const id = getQueryVariable('id');
+            socket = io();
+            socket.on('connect', () => {
+                socket.emit("join", id)
+            });
+
+            socket.on('loadVideo', (video_id) => {
+                player.loadVideoById(video_id, {
+                    playerVars: { 'autoplay': 0, 'controls': 0 },
+                })
+            });
+
+            socket.on('playVideo', () => {
+                player.playVideo()
+            });
+
+            $("#loadVideo").click(() => {
+                socket.emit("loadVideo", {
+                    room: id,
+                    url: $("#url").val()
+                })
+            })
+
+            $("#playVideo").click(() => {
+                socket.emit("playVideo", {
+                    room: id,
+                })
+            })
+
+            $.get(`/api/${id}`, (res) => {
+                $("#room").text(res.room)
+            })
+
+        })
+    </script>
+    <script src="/js/socket.io.js"></script>
+</body>
+
+</html>
