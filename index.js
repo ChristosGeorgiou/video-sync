@@ -5,6 +5,7 @@ const http = require('http')
 const { v4: uuidv4 } = require('uuid');
 const app = express()
 const port = 3000
+const pkg = require("./package.json")
 
 var srv = http.createServer(app);
 var io = socketio(srv);
@@ -12,7 +13,7 @@ var io = socketio(srv);
 var intervals = {}
 
 io.on('connection', (socket) => {
-    console.log('a user connected');
+    console.log(`socket connection ${socket.id}`);
     socket.on("join", (id) => {
         socket.join(id)
     });
@@ -50,4 +51,6 @@ app.get('/api/:uuid', (req, res) => {
     })
 })
 
-srv.listen(port, "0.0.0.0", () => console.log(`Example app listening at http://localhost:${port}`))
+srv.listen(port, "0.0.0.0", () => {
+    console.log(`server v${pkg.version} started at port ${port}`)
+})
