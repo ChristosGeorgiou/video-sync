@@ -9,6 +9,8 @@ const port = 3000
 var srv = http.createServer(app);
 var io = socketio(srv);
 
+var intervals = {}
+
 io.on('connection', (socket) => {
     console.log('a user connected');
     socket.on("join", (id) => {
@@ -22,9 +24,12 @@ io.on('connection', (socket) => {
         }
         io.in(data.room).emit("load", video_id)
 
-        setTimeout(() => {
+        if (intervals[data.room]) {
+            clearTimeout(intervals[data.room])
+        }
+        intervals[data.room] = setTimeout(() => {
             io.in(data.room).emit("play")
-        }, 10 * 1000);
+        }, 6 * 1000);
     })
 });
 
@@ -32,7 +37,7 @@ app.use(express.static('public'));
 
 app.get('/', (req, res) => {
     if (!req.query.id) {
-        res.redirect(`/?id=${uuidv4()}`)
+        res.redirect(`/?id=${uuidv4().substr(0, 5)}`)
     } else {
         res.sendFile(path.join(__dirname, './pages/index.html'));
     }
